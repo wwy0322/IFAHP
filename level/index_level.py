@@ -1,32 +1,10 @@
-from typing import Optional
-from .base import BaseNode
+from .base import BaseNode, BaseRelationNode
+from typing import List
 
 '''
 Level3 决策层节点.
-可以分为自我描述节点和
+可以分为自我描述节点和相互关系节点.
 '''
-
-
-class IndexLevelBaseNode(BaseNode):
-    # 隶属度, 非隶属度, 犹豫度.
-    __slots__ = ('membership', 'non_membership', 'hesitation')
-
-    membership: float
-    non_membership: float
-    hesitation: float
-
-    def __init__(self, name, membership=0.5, non_membership=0.3, hesitation=0.2):
-        super(IndexLevelBaseNode, self).__init__(name)
-        self.membership = membership
-        self.non_membership = non_membership
-        self.hesitation = hesitation
-
-    def __format__(self, format_spec: str) -> str:
-        if format_spec.find("?v") != -1:
-            return "({} {} {})".format(self.membership, self.non_membership, self.hesitation)
-        else:
-            return "{} {} {}".format(self.membership, self.non_membership, self.hesitation)
-
 
 '''
 描述自己的类, 是从数据中获取的.
@@ -35,9 +13,12 @@ class IndexLevelBaseNode(BaseNode):
 '''
 
 
-class IndexLevelInfoNode(IndexLevelBaseNode):
+class IndexLevelInfoNode(BaseNode):
     def __init__(self, name, membership=0.5, non_membership=0.3, hesitation=0.2):
         super(IndexLevelInfoNode).__init__(name, membership, non_membership, hesitation)
+
+    def __format__(self, format_spec: str) -> str:
+        return "{}: ({} {} {})".format(self.name, self.membership, self.non_membership, self.hesitation)
 
 
 '''
@@ -46,6 +27,11 @@ class IndexLevelInfoNode(IndexLevelBaseNode):
 '''
 
 
-class IndexLevelRelationNode(IndexLevelBaseNode):
+class IndexLevelRelationNode(BaseRelationNode):
     def __init__(self, name, membership=0.5, non_membership=0.3, hesitation=0.2):
         super(IndexLevelRelationNode).__init__(name, membership, non_membership, hesitation)
+
+    # 测试环境下可以直接加载模糊度矩阵而不是从basenode计算得来.
+    # TODO 加入限制, 不是跑测试不能运行这个函数.
+    def test_load_data_from_file(self, file) -> List[List[List[BaseRelationNode]]]:
+        return None
