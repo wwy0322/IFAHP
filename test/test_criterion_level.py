@@ -11,11 +11,11 @@ class CriterionLevelTest(unittest.TestCase):
     # 测试数据是否初始化正确.
     def test_read(self):
         m = CriterionLevelMatrix()
-        self.assertEqual(m.test_init_from_data(test_conf_file), True)
+        self.assertEqual(m.init(test_conf_file), True)
         self.assertEqual(len(m.matrix), 1)
         self.assertEqual(len(m.matrix[0]), 4)
         node = m.matrix[0][1][2]
-        self.assertEqual([node.membership, node.non_membership, node.hesitation], [0.56,0.31,0.13])
+        self.assertEqual([node.membership, node.non_membership, node.hesitation], [0.56, 0.31, 0.13])
 
     # 测试数据Fix功能是否ok.
     def test_fix(self):

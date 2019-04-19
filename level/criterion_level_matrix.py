@@ -6,13 +6,14 @@ import json
 import os
 from config import data_dir
 
+
 class CriterionLevelMatrix(BaseLevelMatrix):
 
     def __init__(self):
         super(CriterionLevelMatrix, self).__init__()
 
     # 测试用例接口, 从这里直接加载模糊相关性矩阵, 而不是通过每个node自己的值算出来.
-    def test_init_from_data(self, conf_file: str) -> bool:
+    def __init_by_test(self, conf_file: str) -> bool:
         if not os.path.isfile(conf_file):
             raise RuntimeError("Given conf file is not exist, path = " + conf_file)
         conf_file = open(conf_file, "r")
@@ -48,7 +49,7 @@ class CriterionLevelMatrix(BaseLevelMatrix):
             for i in range(len(group)):
                 for j in range(len(group)):
                     key = "_".join([nodes[i].name, nodes[j].name])
-                    value: List = data[key]
+                    value: List = data["origin_matrix"][key]
                     matrix[i][j] = CriterionLevelRelationNode(key, value[0], value[1], value[2])
 
             rets.append(matrix)

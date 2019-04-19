@@ -54,9 +54,13 @@ class BaseLevelMatrix:
     # 这个存放的是原始的值, 不一定满足一致性检测.
     matrix: List[List[List[BaseRelationNode]]]
 
-    # 修正直觉模糊矩阵值, 以及标度是否迭代ok到一致性稳定.
+    # 直觉模糊判断矩阵值. 这个表示初始的直觉模糊判断矩阵, 可能不满足一致性检测.
     # 这个矩阵的论域: f[y][x]表示x相对于y这个指标的优秀程度.
     fix_matrix: List[List[List[BaseRelationNode]]]
+
+    # 修正直觉模糊矩阵值, 这个位置存放最后达到一致性的矩阵.
+    # 这个矩阵的论域: f[y][x]表示x相对于y这个指标的优秀程度.
+    refined_matrix: List[List[List[BaseRelationNode]]]
 
     # conf, toml的解析对象, 方便随时读取.
     conf: Any
@@ -64,8 +68,10 @@ class BaseLevelMatrix:
     # data, 数据文件的目录.
     data: Any
 
-    # 保存调整后的修正因子.
+    # 保存调整后的修正因子. alpha同时可以表示matrix有没有被初始化ok.
+    # 如果一开始还没有matrix, 那么alpha表示
     alpha: float
+    delta: float
 
     def __init__(self):
         self.rank = 0
@@ -75,13 +81,24 @@ class BaseLevelMatrix:
         self.conf = None
         self.data = None
         self.alpha = -1
+        self.delta = 0.01
 
     # 检查自己的matrix
     def check_consistency(self) -> bool:
+        if self.alpha < 0:
+            raise RuntimeError("check consistency before construct matrix!")
+
         return True
 
     def init(self, conf_file: str) -> bool:
-        return True
+        # TODO 更好的表示测试的方法
+        if conf_file.find("test") != -1:
+            return self.__init_by_test(conf_file)
+        else:
+            return True
+
+    def __init_by_test(self, conf_file: str) -> bool:
+        return False
 
     def __construct_matrix(
             self,
@@ -92,22 +109,32 @@ class BaseLevelMatrix:
         if not ret[0]:
             return False
         self.matrix = ret[1]
+        self.alpha = 0
         return True
 
     def fix(self):
+        # TODO 一个更好的表示是否已经产生数据的方法.
+        if len(self.matrix) == 0:
+            raise RuntimeError("In this case, construct matrix fail!")
+
         if len(self.fix_matrix) == 0:
-            self.__construct_fixed_nodes()
-        delta = 0.001
+            if not self._calc_fix_matrix():
+                raise RuntimeError("In this case, construct fix matrix fail!")
+        if len(self.refined_matrix) == 0:
+            if not self._calc_refined_matrix():
+                raise RuntimeError("In this case, construct refined matrix fail!")
+
+
+    def calc_matrix(self) -> bool:
+        return True
+
+    def _calc_fix_matrix(self) -> bool:
+        return True
+
+    def _calc_refined_matrix(self) -> bool:
         while self.alpha < 1:
-            self.__fix()
             if self.check_consistency():
-                break
-            self.alpha += delta
-
-        self.consistancy = True
-
-    def __fix(self):
-        return None
-
-    def __construct_fixed_nodes(self):
-        return None
+                self.consistancy = True
+                return True
+            self.alpha += self.delta
+        return False
