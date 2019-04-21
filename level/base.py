@@ -93,11 +93,11 @@ class BaseLevelMatrix:
     def init(self, conf_file: str) -> bool:
         # TODO 更好的表示测试的方法
         if conf_file.find("test") != -1:
-            return self.__init_by_test(conf_file)
+            return self._init_by_test(conf_file)
         else:
             return True
 
-    def __init_by_test(self, conf_file: str) -> bool:
+    def _init_by_test(self, conf_file: str) -> bool:
         return False
 
     def __construct_matrix(

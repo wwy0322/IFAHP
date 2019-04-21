@@ -13,7 +13,7 @@ class CriterionLevelMatrix(BaseLevelMatrix):
         super(CriterionLevelMatrix, self).__init__()
 
     # 测试用例接口, 从这里直接加载模糊相关性矩阵, 而不是通过每个node自己的值算出来.
-    def __init_by_test(self, conf_file: str) -> bool:
+    def _init_by_test(self, conf_file: str) -> bool:
         if not os.path.isfile(conf_file):
             raise RuntimeError("Given conf file is not exist, path = " + conf_file)
         conf_file = open(conf_file, "r")
