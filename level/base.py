@@ -1,4 +1,9 @@
 from typing import List, Mapping, Any, Callable, Tuple
+import toml
+from config import data_dir
+import os
+import json
+import abc
 
 '''
 所有的直觉模糊度节点基类
@@ -26,6 +31,9 @@ class BaseNode:
         except Exception as e:
             raise RuntimeError("Get Node Value From Conf Error! name = " + self.name + ", Exception = " + e.__str__())
 
+    def __format__(self, format_spec: str) -> str:
+        return "{}: ({} {} {})".format(self.name, self.membership, self.non_membership, self.hesitation)
+
 
 '''
 关联节点类型基类
@@ -39,6 +47,9 @@ class BaseRelationNode(BaseNode):
 
 
 class BaseLevelMatrix:
+    # 当前层的配置读取名字.
+    name: str
+
     # 秩, 也就是这个matrix内包含了多少个level node.
     rank: int
 
@@ -73,6 +84,10 @@ class BaseLevelMatrix:
     alpha: float
     delta: float
 
+    # 只有决策层和准则层有
+    # 对应下层的哪个group
+    group_id: int
+
     def __init__(self):
         self.rank = 0
         self.nodes = []
@@ -82,6 +97,8 @@ class BaseLevelMatrix:
         self.data = None
         self.alpha = -1
         self.delta = 0.01
+        self.name = "unknown"
+        self.group_id = -1
 
     # 检查自己的matrix
     def check_consistency(self) -> bool:
@@ -93,11 +110,26 @@ class BaseLevelMatrix:
     def init(self, conf_file: str) -> bool:
         # TODO 更好的表示测试的方法
         if conf_file.find("test") != -1:
-            return self._init_by_test(conf_file)
+            ret = self._init_test(conf_file)
         else:
-            return True
+            ret = self._init_conf(conf_file)
+        if not ret:
+            return ret
 
-    def _init_by_test(self, conf_file: str) -> bool:
+    def _init_conf(self, conf_file: str) -> bool:
+        with open(conf_file, "r") as conf_file:
+            self.conf = toml.load(conf_file)[self.name]
+            with open(os.path.join(data_dir, self.conf["data_file"]), "r") as data_file:
+                # TODO 目前默认为case1.
+                self.data = json.load(data_file)["case1"]
+        return self._init_nodes_from_conf()
+
+    @abc.abstractmethod
+    def _init_nodes_from_conf(self) -> bool:
+        pass
+
+    # 被单独测试实现的方法.
+    def _init_test(self, conf_file: str) -> bool:
         return False
 
     def __construct_matrix(
@@ -112,18 +144,20 @@ class BaseLevelMatrix:
         self.alpha = 0
         return True
 
+    # 拟合该层直到符合一致性矩阵判断标准.
     def fix(self):
         # TODO 一个更好的表示是否已经产生数据的方法.
         if len(self.matrix) == 0:
-            raise RuntimeError("In this case, construct matrix fail!")
+            if not self.calc_matrix():
+                raise RuntimeError("In this case, construct fix matrix fail!")
 
         if len(self.fix_matrix) == 0:
             if not self._calc_fix_matrix():
                 raise RuntimeError("In this case, construct fix matrix fail!")
+
         if len(self.refined_matrix) == 0:
             if not self._calc_refined_matrix():
                 raise RuntimeError("In this case, construct refined matrix fail!")
-
 
     def calc_matrix(self) -> bool:
         return True

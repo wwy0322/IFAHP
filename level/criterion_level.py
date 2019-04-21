@@ -2,7 +2,7 @@ from .base import BaseNode, BaseRelationNode
 from typing import List
 
 '''
-Level2 准组层层节点.
+Level2 准则层节点.
 可以分为自我描述节点和相互关系节点.
 '''
 

@@ -2,7 +2,7 @@ from .base import BaseNode, BaseRelationNode
 from typing import List
 
 '''
-Level3 决策层节点.
+Level3 准则层节点.
 可以分为自我描述节点和相互关系节点.
 '''
 

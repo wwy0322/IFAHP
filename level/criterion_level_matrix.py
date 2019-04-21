@@ -11,15 +11,17 @@ class CriterionLevelMatrix(BaseLevelMatrix):
 
     def __init__(self):
         super(CriterionLevelMatrix, self).__init__()
+        self.name = "criterions"
 
     # 测试用例接口, 从这里直接加载模糊相关性矩阵, 而不是通过每个node自己的值算出来.
-    def _init_by_test(self, conf_file: str) -> bool:
+    def _init_test(self, conf_file: str) -> bool:
         if not os.path.isfile(conf_file):
             raise RuntimeError("Given conf file is not exist, path = " + conf_file)
-        conf_file = open(conf_file, "r")
-        self.conf = toml.load(conf_file)['criterions']
-        data_file = open(os.path.join(data_dir, self.conf["data_file"]), "r")
-        self.data = json.load(data_file)["case1"]
+
+
+        return True
+
+    def _init_nodes_from_conf(self) -> bool:
         node_cnt = int(self.conf["node_cnt"])
         self.groups.append([x for x in range(node_cnt)])
         for node in self.conf["criterion"]:
@@ -28,10 +30,6 @@ class CriterionLevelMatrix(BaseLevelMatrix):
             self.nodes.append(n)
 
         self.matrix = CriterionLevelMatrix.calc_relation_test(self.nodes, self.groups, self.conf, self.data)
-
-        conf_file.close()
-        data_file.close()
-        return True
 
     # 测试的方法, 直接从配置文件里面读了.
     @staticmethod

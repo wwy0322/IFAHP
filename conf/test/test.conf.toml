@@ -8,24 +8,23 @@ name = "target_level"
 # 准则层配置.
 [criterions]
 node_cnt = 4
-name = "criterion_level"
 data_file = "criterion_level_data.test.json"
-    [[criterions.criterion]]
+    [[criterions.node]]
     index = 0
     name = "基本信息"
     dname = "cri.0"
     childs = [0,1,2,3]
-    [[criterions.criterion]]
+    [[criterions.node]]
     index = 1
     name = "交易信息"
     dname = "cri.1"
     childs = [4,5,6,7,8]
-    [[criterions.criterion]]
+    [[criterions.node]]
     index = 2
     name = "产品因素"
     dname = "cri.2"
     childs = [9,10,11,12]
-    [[criterions.criterion]]
+    [[criterions.node]]
     index = 3
     name = "物流因素"
     dname = "cri.3"
@@ -34,79 +33,96 @@ data_file = "criterion_level_data.test.json"
 # 指标层配置.
 [indices]
 node_cnt = 18
-name = "index_level"
 data_file = "index_level_data.test.json"
-    [[indices.index]]
+    [[indices.node]]
     index = 0
     name = "商家规模"
     dname = "ind.1"
-    [[indices.index]]
+    group_id = 0
+    [[indices.node]]
     index = 1
     name = "商家知名度"
     dname = "ind.1"
-    [[indices.index]]
+    group_id = 0
+    [[indices.node]]
     index = 2
     name = "经营资质"
     dname = "ind.2"
-    [[indices.index]]
+    group_id = 0
+    [[indices.node]]
     index = 3
     name = "经营历史"
     dname = "ind.3"
-    [[indices.index]]
+    group_id = 0
+    [[indices.node]]
     index = 4
     name = "被处罚次数"
     dname = "ind.4"
-    [[indices.index]]
+    group_id = 1
+    [[indices.node]]
     index = 5
     name = "投诉率"
     dname = "ind.5"
-    [[indices.index]]
+    group_id = 1
+    [[indices.node]]
     index = 6
     name = "退款率"
     dname = "ind.6"
-    [[indices.index]]
+    group_id = 1
+    [[indices.node]]
     index = 7
     name = "退款速度"
     dname = "ind.7"
-    [[indices.index]]
+    group_id = 1
+    [[indices.node]]
     index = 8
     name = "商品质量"
     dname = "ind.8"
-    [[indices.index]]
+    group_id = 1
+    [[indices.node]]
     index = 9
     name = "商品相符度"
     dname = "ind.9"
-    [[indices.index]]
+    group_id = 2
+    [[indices.node]]
     index = 10
     name = "售后服务"
     dname = "ind.10"
-    [[indices.index]]
+    group_id = 2
+    [[indices.node]]
     index = 11
     name = "承诺兑现度"
     dname = "ind.11"
-    [[indices.index]]
+    group_id = 2
+    [[indices.node]]
     index = 12
     name = "反馈及时性"
     dname = "ind.12"
-    [[indices.index]]
+    group_id = 2
+    [[indices.node]]
     index = 13
     name = "发货速度"
     dname = "ind.13"
-    [[indices.index]]
+    group_id = 3
+    [[indices.node]]
     index = 14
     name = "发货正确性"
     dname = "ind.14"
-    [[indices.index]]
+    group_id = 3
+    [[indices.node]]
     index = 15
     name = "到货时长"
     dname = "ind.15"
-    [[indices.index]]
+    group_id = 3
+    [[indices.node]]
     index = 16
     name = "配送地点准确性"
     dname = "16"
-    [[indices.index]]
+    group_id = 3
+    [[indices.node]]
     index = 17
     name = "包装完整性"
     dname = "ind.17"
+    group_id = 3
 
 
