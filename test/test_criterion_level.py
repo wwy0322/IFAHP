@@ -3,23 +3,31 @@ from config import test_conf_file
 from level.criterion_level_matrix import CriterionLevelMatrix
 
 '''
-针对第一份数据的测试用例
+针对第一份数据准则层的测试用例
+测试点:
+1. 数据API读取的正确性
+2. 验证一致性的函数正确性.
+3. 验证迭代过程的正确性.
 '''
 
 
 class CriterionLevelTest(unittest.TestCase):
-    # 测试数据是否初始化正确.
-    def test_read(self):
+    m: CriterionLevelMatrix
+
+    def setUp(self):
         m = CriterionLevelMatrix()
         self.assertEqual(m.init(test_conf_file), True)
-        self.assertEqual(len(m.matrix), 1)
-        self.assertEqual(len(m.matrix[0]), 4)
-        node = m.matrix[0][1][2]
-        self.assertEqual([node.membership, node.non_membership, node.hesitation], [0.56, 0.31, 0.13])
+
+    # 测试数据是否初始化正确.
+    def test_read(self):
+        self.assertEqual(len(self.m.matrix), 1)
+        self.assertEqual(len(self.m.matrix[0]), 4)
+        node = self.m.matrix[0][1][2]
+        self.assertEqual(node.into_vec(), [0.56, 0.31, 0.13])
 
     # 测试数据Fix功能是否ok.
     def test_fix(self):
-        return None
+        self.m.fix()
 
     def __compare_fix_result(self):
         return None

@@ -1,4 +1,4 @@
-from typing import List, Mapping, Any, Callable, Tuple
+from typing import List, Mapping, Any, Callable, Tuple, Dict
 import toml
 from config import data_dir
 import os
@@ -33,6 +33,9 @@ class BaseNode:
 
     def __format__(self, format_spec: str) -> str:
         return "{}: ({} {} {})".format(self.name, self.membership, self.non_membership, self.hesitation)
+
+    def into_vec(self):
+        return [self.membership, self.non_membership, self.hesitation]
 
 
 '''
@@ -103,28 +106,26 @@ class BaseLevelMatrix:
     # 检查自己的matrix
     def check_consistency(self) -> bool:
         # 一致性检查必须在由原始数据计算得到一致性判断矩阵之后，才能进行
-        #if self.alpha < 0:
-            #raise RuntimeError("check consistency before construct matrix!")
+        # if self.alpha < 0:
+        # raise RuntimeError("check consistency before construct matrix!")
 
         # 每次遍历一个group.
         for i in range(len(self.matrix)):
             # 遍历矩阵内元素
             for j in range(len(self.matrix[i])):
                 for k in range(len(self.matrix[i][j])):
-                    mem=abs(self.fix_matrix[i][j][k].membership-self.matrix[i][j][k].membership)
-                    nonmem=abs(self.fix_matrix[i][j][k].non_membership-self.matrix[i][j][k].non_membership)
-                    hesi=abs(self.fix_matrix[i][j][k].hesitation-self.matrix[i][j][k].hesitation)
-                    D=(mem+nonmem+hesi)/2*(len(self.matrix[i]))
+                    mem = abs(self.fix_matrix[i][j][k].membership - self.matrix[i][j][k].membership)
+                    nonmem = abs(self.fix_matrix[i][j][k].non_membership - self.matrix[i][j][k].non_membership)
+                    hesi = abs(self.fix_matrix[i][j][k].hesitation - self.matrix[i][j][k].hesitation)
+                    D = (mem + nonmem + hesi) / 2 * (len(self.matrix[i]))
         return D < 0.1
 
     def init(self, conf_file: str) -> bool:
-        # TODO 更好的表示测试的方法
-        if conf_file.find("test") != -1:
-            ret = self._init_test(conf_file)
-        else:
-            ret = self._init_conf(conf_file)
+
+        ret = self._init_conf(conf_file)
         if not ret:
             return ret
+        return self._init_nodes_from_conf()
 
     def _init_conf(self, conf_file: str) -> bool:
         with open(conf_file, "r") as conf_file:
@@ -132,16 +133,17 @@ class BaseLevelMatrix:
             with open(os.path.join(data_dir, self.conf["data_file"]), "r") as data_file:
                 # TODO 目前默认为case1.
                 self.data = json.load(data_file)["case1"]
-        return self._init_nodes_from_conf()
+        return True
 
+    # 这个函数初始化nodes和groups这两个矩阵.
     @abc.abstractmethod
     def _init_nodes_from_conf(self) -> bool:
-        pass
+        for node in self.conf['nodes']:
+            name: str = node['dname']
+            group_id: str = node['group_id']
 
-    # 被单独测试实现的方法.
-    def _init_test(self, conf_file: str) -> bool:
-        return False
 
+    # 这个函数从初始化好的nodes和groups里计算matrix.
     def __construct_matrix(
             self,
             func: Callable[[List[BaseNode], List[List[int]], Any, Any], Tuple[bool, List[List[List[BaseRelationNode]]]]]
@@ -173,23 +175,30 @@ class BaseLevelMatrix:
         return True
 
     def _calc_fix_matrix(self) -> bool:
-        m1,m2,nm1,nm2 = 1,1,1,1
+        m1, m2, nm1, nm2 = 1, 1, 1, 1
         # 遍历group
         for i in range(len(self.matrix)):
             # 遍历矩阵内元素
             for j in range(len(self.matrix[i])):
                 for k in range(len(self.matrix[i][j])):
-                    if k==j+1:
-                        self.fix_matrix[i][j][k]=self.matrix[i][j][k]
-                    elif k>j+1:
-                        for t in range(j+1,k-1):
-                            m1 = m1*pow(self.matrix[i][j][t].membership * self.matrix[i][t][k].membership,1/(j-i-1))
-                            m2 = m2*pow((1-self.matrix[i][j][t].membership) * (1-self.matrix[i][t][k].membership),1/(j-i-1))
-                            nm1 = nm1*pow(self.matrix[i][j][t].non_membership * self.matrix[i][t][k].membership,1/(j-i-1))
-                            nm2 = nm1*pow((1-self.matrix[i][j][t].non_membership) * (1-self.matrix[i][t][k].non_membership),1/(j-i-1))
-                            self.fix_matrix[i][j][k].membership = m1/(m1+m2)
-                            self.fix_matrix[i][j][k].non_membership = nm1/(nm1+nm2)
-                            self.fix_matrix[i][j][k].hesitation = (1-self.fix_matrix[i][j][k].membership-self.fix_matrix[i][j][k].non_membership)
+                    if k == j + 1:
+                        self.fix_matrix[i][j][k] = self.matrix[i][j][k]
+                    elif k > j + 1:
+                        for t in range(j + 1, k - 1):
+                            m1 = m1 * pow(self.matrix[i][j][t].membership * self.matrix[i][t][k].membership,
+                                          1 / (j - i - 1))
+                            m2 = m2 * pow((1 - self.matrix[i][j][t].membership) * (1 - self.matrix[i][t][k].membership),
+                                          1 / (j - i - 1))
+                            nm1 = nm1 * pow(self.matrix[i][j][t].non_membership * self.matrix[i][t][k].membership,
+                                            1 / (j - i - 1))
+                            nm2 = nm1 * pow(
+                                (1 - self.matrix[i][j][t].non_membership) * (1 - self.matrix[i][t][k].non_membership),
+                                1 / (j - i - 1))
+                            self.fix_matrix[i][j][k].membership = m1 / (m1 + m2)
+                            self.fix_matrix[i][j][k].non_membership = nm1 / (nm1 + nm2)
+                            self.fix_matrix[i][j][k].hesitation = (
+                                        1 - self.fix_matrix[i][j][k].membership - self.fix_matrix[i][j][
+                                    k].non_membership)
                     else:
                         self.fix_matrix[i][j][k].membership = 0.5
                         self.fix_matrix[i][j][k].non_membership = 0.5

@@ -31,8 +31,3 @@ class CriterionLevelInfoNode(BaseNode):
 class CriterionLevelRelationNode(BaseRelationNode):
     def __init__(self, name, membership=0.5, non_membership=0.3, hesitation=0.2):
         super(CriterionLevelRelationNode, self).__init__(name, membership, non_membership, hesitation)
-
-    # 测试环境下可以直接加载模糊度矩阵而不是从basenode计算得来.
-    # TODO 加入限制, 不是跑测试不能运行这个函数.
-    def test_load_data_from_file(self, file) -> List[List[List[BaseRelationNode]]]:
-        return None
