@@ -60,16 +60,16 @@ class BaseLevelMatrix:
     # 这里只存索引.
     groups: List[List[int]]
 
-    # 存放relationship Node矩阵.
+    # 存放relationship Node矩阵,即直觉模糊判断矩阵
     # 三层list对照group, 最外层是分组, 一组内需要两个纬度.
     # 这个存放的是原始的值, 不一定满足一致性检测.
     matrix: List[List[List[BaseRelationNode]]]
 
-    # 直觉模糊判断矩阵值. 这个表示初始的直觉模糊判断矩阵, 可能不满足一致性检测.
+    # 直觉模糊一致性判断矩阵值，可能不满足一致性检测.
     # 这个矩阵的论域: f[y][x]表示x相对于y这个指标的优秀程度.
     fix_matrix: List[List[List[BaseRelationNode]]]
 
-    # 修正直觉模糊矩阵值, 这个位置存放最后达到一致性的矩阵.
+    # 经过转换后的直觉模糊一致性判断矩阵值, 这个位置存放最后达到一致性的矩阵.
     # 这个矩阵的论域: f[y][x]表示x相对于y这个指标的优秀程度.
     refined_matrix: List[List[List[BaseRelationNode]]]
 
@@ -102,10 +102,20 @@ class BaseLevelMatrix:
 
     # 检查自己的matrix
     def check_consistency(self) -> bool:
-        if self.alpha < 0:
-            raise RuntimeError("check consistency before construct matrix!")
+        # 一致性检查必须在由原始数据计算得到一致性判断矩阵之后，才能进行
+        #if self.alpha < 0:
+            #raise RuntimeError("check consistency before construct matrix!")
 
-        return True
+        # 每次遍历一个group.
+        for i in range(len(self.matrix)):
+            # 遍历矩阵内元素
+            for j in range(len(self.matrix[i])):
+                for k in range(len(self.matrix[i][j])):
+                    mem=abs(self.fix_matrix[i][j][k].membership-self.matrix[i][j][k].membership)
+                    nonmem=abs(self.fix_matrix[i][j][k].non_membership-self.matrix[i][j][k].non_membership)
+                    hesi=abs(self.fix_matrix[i][j][k].hesitation-self.matrix[i][j][k].hesitation)
+                    D=(mem+nonmem+hesi)/2*(len(self.matrix[i]))
+        return D < 0.1
 
     def init(self, conf_file: str) -> bool:
         # TODO 更好的表示测试的方法
@@ -141,7 +151,7 @@ class BaseLevelMatrix:
         if not ret[0]:
             return False
         self.matrix = ret[1]
-        self.alpha = 0
+        self.alpha = 1
         return True
 
     # 拟合该层直到符合一致性矩阵判断标准.
@@ -163,6 +173,27 @@ class BaseLevelMatrix:
         return True
 
     def _calc_fix_matrix(self) -> bool:
+        m1,m2,nm1,nm2 = 1,1,1,1
+        # 遍历group
+        for i in range(len(self.matrix)):
+            # 遍历矩阵内元素
+            for j in range(len(self.matrix[i])):
+                for k in range(len(self.matrix[i][j])):
+                    if k==j+1:
+                        self.fix_matrix[i][j][k]=self.matrix[i][j][k]
+                    elif k>j+1:
+                        for t in range(j+1,k-1):
+                            m1 = m1*pow(self.matrix[i][j][t].membership * self.matrix[i][t][k].membership,1/(j-i-1))
+                            m2 = m2*pow((1-self.matrix[i][j][t].membership) * (1-self.matrix[i][t][k].membership),1/(j-i-1))
+                            nm1 = nm1*pow(self.matrix[i][j][t].non_membership * self.matrix[i][t][k].membership,1/(j-i-1))
+                            nm2 = nm1*pow((1-self.matrix[i][j][t].non_membership) * (1-self.matrix[i][t][k].non_membership),1/(j-i-1))
+                            self.fix_matrix[i][j][k].membership = m1/(m1+m2)
+                            self.fix_matrix[i][j][k].non_membership = nm1/(nm1+nm2)
+                            self.fix_matrix[i][j][k].hesitation = (1-self.fix_matrix[i][j][k].membership-self.fix_matrix[i][j][k].non_membership)
+                    else:
+                        self.fix_matrix[i][j][k].membership = 0.5
+                        self.fix_matrix[i][j][k].non_membership = 0.5
+                        self.fix_matrix[i][j][k].hesitation = 0
         return True
 
     def _calc_refined_matrix(self) -> bool:
