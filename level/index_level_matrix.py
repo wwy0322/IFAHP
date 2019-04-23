@@ -1,6 +1,5 @@
 from typing import List
-from .index_level import IndexLevelRelationNode, IndexLevelInfoNode
-from .base import BaseLevelMatrix
+from .component import BaseLevelMatrix
 import toml
 from typing import Optional, TypeVar, List
 import copy

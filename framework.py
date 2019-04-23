@@ -1,7 +1,7 @@
 from level.target_level_matrix import TargetLeveLMatrix
 from level.criterion_level_matrix import CriterionLevelMatrix
 from level.index_level_matrix import IndexLevelMatrix
-from typing import Mapping, List, Tuple
+from typing import List, Tuple
 
 
 class Framework:

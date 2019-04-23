@@ -1,4 +1,4 @@
-from .base import BaseLevelMatrix
+from .component import BaseLevelMatrix
 
 
 class TargetLeveLMatrix(BaseLevelMatrix):

@@ -12,11 +12,12 @@ from level.criterion_level_matrix import CriterionLevelMatrix
 
 
 class CriterionLevelTest(unittest.TestCase):
+
     m: CriterionLevelMatrix
 
     def setUp(self):
-        m = CriterionLevelMatrix()
-        self.assertEqual(m.init(test_conf_file), True)
+        self.m = CriterionLevelMatrix()
+        self.assertEqual(self.m.init(test_conf_file), True)
 
     # 测试数据是否初始化正确.
     def test_read(self):
@@ -24,10 +25,3 @@ class CriterionLevelTest(unittest.TestCase):
         self.assertEqual(len(self.m.matrix[0]), 4)
         node = self.m.matrix[0][1][2]
         self.assertEqual(node.into_vec(), [0.56, 0.31, 0.13])
-
-    # 测试数据Fix功能是否ok.
-    def test_fix(self):
-        self.m.fix()
-
-    def __compare_fix_result(self):
-        return None

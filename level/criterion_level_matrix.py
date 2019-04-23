@@ -1,5 +1,4 @@
-from .base import BaseLevelMatrix, BaseNode
-from .criterion_level import CriterionLevelInfoNode, CriterionLevelRelationNode
+from .component import BaseLevelMatrix, Node, RelationNode
 from typing import Any, List
 import toml
 import json
@@ -13,34 +12,25 @@ class CriterionLevelMatrix(BaseLevelMatrix):
         super(CriterionLevelMatrix, self).__init__()
         self.name = "criterions"
 
-    def _init_nodes_from_conf(self) -> bool:
-        node_cnt = int(self.conf["node_cnt"])
-        self.groups.append([x for x in range(node_cnt)])
-        for node in self.conf["criterion"]:
-            # 数据缺失, 所以并没有真的去填充值.
-            n = CriterionLevelInfoNode(node["dname"])
-            self.nodes.append(n)
+    def init(self, conf_file: str) -> bool:
+        if conf_file.find("test") != -1:
+            return self.init_test(conf_file)
+        else:
+            return super(CriterionLevelMatrix, self).init(conf_file)
 
-        self.matrix = CriterionLevelMatrix.calc_relation_test(self.nodes, self.groups, self.conf, self.data)
+    # TODO 为了测试目录方便, 这些接口全都暴露了出来. 后续可以把测试用例实现在本文件内.
+    # TODO 测试目录文件只负责集成测试.
+    def init_test(self, conf_file: str) -> bool:
+        ret = self.init_conf(conf_file)
+        if not ret:
+            return ret
 
-    # 测试的方法, 直接从配置文件里面读了.
-    @staticmethod
-    def calc_relation_test(nodes: List[BaseNode], groups: List[List[int]], conf: Any, data: Any) -> (
-            bool, List[List[List[CriterionLevelRelationNode]]]):
-        rets = []
-        for group in groups:
-            group.sort()
-            # 初始化该单元matrix的空间.
-            matrix = [[] for i in range(len(group))]
-            for i in range(len(group)):
-                matrix[i] = [None for i in range(len(group))]
+        ret = self.init_nodes_from_conf()
+        if not ret:
+            return ret
 
-            # 计算实际值.
-            for i in range(len(group)):
-                for j in range(len(group)):
-                    key = "_".join([nodes[i].name, nodes[j].name])
-                    value: List = data["origin_matrix"][key]
-                    matrix[i][j] = CriterionLevelRelationNode(key, value[0], value[1], value[2])
+        def init_matrix_test_func(node_a: Node, node_b: Node) -> List[float]:
+            data = self.data['origin_matrix']
+            return data[node_a.name + "_" + node_b.name]
 
-            rets.append(matrix)
-        return rets
+        return self.calc_matrix(init_matrix_test_func)
