@@ -1,9 +1,8 @@
-from typing import List, Dict, Any, Callable, Tuple
+from typing import List, Any, Callable
 import toml
 from config import data_dir
 import os
 import json
-import abc
 
 '''
 所有的直觉模糊度节点类
@@ -47,7 +46,7 @@ class RelationNode(Node):
     def __init__(self, node_a: Node, node_b: Node, f: Callable = None):
         self.node_a = node_a
         self.node_b = node_b
-        self.name = node_a.name + "_" + node_b.name
+        super(RelationNode, self).__init__(node_a.name + "_" + node_b.name)
         if f is not None:
             self.membership, self.non_membership, self.hesitation = f(node_a, node_b)
         else:
@@ -107,6 +106,8 @@ class BaseLevelMatrix:
         self.nodes = []
         self.groups = []
         self.matrix = []
+        self.fix_matrix = []
+        self.refined_matrix = []
         self.conf = None
         self.data = None
         self.alpha = -1
@@ -165,7 +166,8 @@ class BaseLevelMatrix:
 
     @staticmethod
     # 检查自己的matrix
-    def check_consistency(origin_matrix: List[List[RelationNode]], target_matrix: List[List[RelationNode]]) -> bool:
+    def check_consistency(origin_matrix: List[List[RelationNode]], target_matrix: List[List[RelationNode]]) \
+            -> (bool, float):
         if len(origin_matrix) == 0:
             raise RuntimeError("check consistency given a empty matrix!")
         if len(origin_matrix) != len(target_matrix):
@@ -186,7 +188,7 @@ class BaseLevelMatrix:
                 d += (mem + nonmem + hesi)
         n = len(origin_matrix)
         d = d / (2 * (n - 1) * (n - 2))
-        return d < 0.1
+        return d < 0.1, d
 
     # 这个函数从初始化好的nodes和groups里计算matrix.
     def calc_matrix(
@@ -231,8 +233,7 @@ class BaseLevelMatrix:
                             self.fix_matrix[i][j][k].membership = m1 / (m1 + m2)
                             self.fix_matrix[i][j][k].non_membership = nm1 / (nm1 + nm2)
                             self.fix_matrix[i][j][k].hesitation = (
-                                    1 - self.fix_matrix[i][j][k].membership - self.fix_matrix[i][j][
-                                k].non_membership)
+                                    1 - self.fix_matrix[i][j][k].membership - self.fix_matrix[i][j][k].non_membership)
                     if k == j + 1:
                         self.fix_matrix[i][j][k] = self.matrix[i][j][k]
                     elif k > j + 1:
@@ -249,8 +250,7 @@ class BaseLevelMatrix:
                             self.fix_matrix[i][j][k].membership = m1 / (m1 + m2)
                             self.fix_matrix[i][j][k].non_membership = nm1 / (nm1 + nm2)
                             self.fix_matrix[i][j][k].hesitation = (
-                                    1 - self.fix_matrix[i][j][k].membership - self.fix_matrix[i][j][
-                                k].non_membership)
+                                    1 - self.fix_matrix[i][j][k].membership - self.fix_matrix[i][j][k].non_membership)
                     else:
                         self.fix_matrix[i][j][k].membership = 0.5
                         self.fix_matrix[i][j][k].non_membership = 0.5
@@ -276,6 +276,5 @@ class BaseLevelMatrix:
                         self.refined_matrix[i][j][k].membership = refine_m1 / (refine_m1 + refine_m2)
                         self.refined_matrix[i][j][k].non_membership = refine_nm1 / (refine_nm1 + refine_nm2)
                         self.refined_matrix[i][j][k].hesitation = 1-self.refined_matrix[i][j][k].membership-self.refined_matrix[i][j][k].non_membership
-                # 注意！check_consistency()内容是matrix与fix_matrix的计算，此处应该为matrix与refine_matrix的计算,应作修改
-                return self.check_consistency(self.matrix[i], self.refined_matrix[i])
+                return self.check_consistency(self.matrix[i], self.refined_matrix[i])[0]
         return False

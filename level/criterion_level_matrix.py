@@ -1,9 +1,5 @@
-from .component import BaseLevelMatrix, Node, RelationNode
-from typing import Any, List
-import toml
-import json
-import os
-from config import data_dir
+from .component import BaseLevelMatrix, Node
+from typing import List
 
 
 class CriterionLevelMatrix(BaseLevelMatrix):
