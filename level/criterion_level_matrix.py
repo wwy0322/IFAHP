@@ -1,6 +1,6 @@
 from .component import BaseLevelMatrix, Node
 from typing import List
-
+from .index_level_matrix import IndexLevelMatrix
 
 class CriterionLevelMatrix(BaseLevelMatrix):
 
@@ -13,6 +13,7 @@ class CriterionLevelMatrix(BaseLevelMatrix):
             return self.init_test(conf_file)
         else:
             return super(CriterionLevelMatrix, self).init(conf_file)
+
 
     # TODO 为了测试目录方便, 这些接口全都暴露了出来. 后续可以把测试用例实现在本文件内.
     # TODO 测试目录文件只负责集成测试.

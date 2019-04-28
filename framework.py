@@ -1,28 +1,30 @@
 from level.target_level_matrix import TargetLeveLMatrix
 from level.criterion_level_matrix import CriterionLevelMatrix
 from level.index_level_matrix import IndexLevelMatrix
-from typing import List, Tuple
+from typing import Tuple
+from level import util
+from functools import reduce
 
 
 class Framework:
     target_level: TargetLeveLMatrix
-    t2c_weight: Tuple[float, float]
     criterion_level: CriterionLevelMatrix
-    c2i_weight: List[Tuple[float, float]]
     index_level: IndexLevelMatrix
+    final_weight: Tuple[float, float]
 
     def __init__(self, conf_file):
+        self.target_level = TargetLeveLMatrix()
         ret = self.target_level.init(conf_file)
         if not ret:
             raise RuntimeError("target level init error!")
+        self.criterion_level = CriterionLevelMatrix()
         ret = self.criterion_level.init(conf_file)
         if not ret:
             raise RuntimeError("criterion level init error!")
+        self.index_level = IndexLevelMatrix()
         ret = self.index_level.init(conf_file)
         if not ret:
             raise RuntimeError("index level init error!")
-
-        self._connect_network()
 
     # 求解直觉模糊矩阵的合理值.计算矩阵的权重.
     def build(self):
@@ -38,27 +40,31 @@ class Framework:
             raise RuntimeError("index level fix error!")
 
         # 生成最终权重阶段  阶段
+        final_weight_set = []
+        criterion_nodes_cnt = len(self.criterion_level.nodes)
+        for criterion_id in range(criterion_nodes_cnt):
+            index_group = self.index_level.groups[criterion_id]
+            for index_id in index_group:
+                final_weight_set.append(util.weight_mul(
+                    self.criterion_level.weight_list[criterion_id],
+                    self.index_level.weight_list[index_id]
+                ))
 
-    # 为三层之间建立map和group映射关系, 以及对应的weight
-    def _connect_network(self, conf):
-        # target to criterion
-        raise NotImplementedError
-
-        # criterion to index.
+        self.final_weight = reduce(lambda x, y: util.weight_add(x, y), final_weight_set)
 
     def after_build(self) -> bool:
         # 各种check是否合法.
         ret = True
-        ret &= len(self.criterion_level.nodes) == len(self.c2i_weight)
+        ret &= len(self.criterion_level.nodes) == len(self.criterion_level.weight_list)
 
         return ret
 
     def __format__(self, format_spec):
         def final_result_calc(arg: Tuple[float, float]) -> float:
             return 0.5 * (1 + arg[0]) * (1 - arg[1])
+
         ret = " ============ \n"
-        ret += " Level 1 Weight = {} \n".format("{}".format(self.t2c_weight))
-        ret += " Level 2 Weight = {} \n".format(" ".join([
-            "({}, {})".format(t[0], t[1]) for t in self.c2i_weight
-        ]))
-        ret += " Final Result = {} \n".format(final_result_calc(self.t2c_weight))
+        ret += " Level 0 weight = {} \n".format("{}".format(self.final_weight))
+        ret += " Level 1 Weight = {} \n".format("{}".format(self.criterion_level.weight_list))
+        ret += " Level 2 Weight = {} \n".format("{}".format(self.index_level.weight_list))
+        ret += " Final Result = {} \n".format(final_result_calc(self.final_weight))

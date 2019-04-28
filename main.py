@@ -1,6 +1,7 @@
 from framework import Framework
 from config import conf_file
 
+
 def main():
     f = Framework(conf_file)
     f.build()
@@ -8,6 +9,7 @@ def main():
         raise RuntimeError("Framework build Fail!")
 
     print(f)
+
 
 if __name__ == '__main__':
     main()

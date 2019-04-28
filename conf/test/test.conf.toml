@@ -2,7 +2,7 @@
 
 [target]
 name = "target_level"
-
+childs_group_id = 0
 
 
 # 准则层配置.
@@ -14,25 +14,25 @@ data_file = "criterion_level_data.test.json"
     name = "基本信息"
     dname = "cri.0"
     group_id = 0
-    childs = [0,1,2,3]
+    childs_group_id = 0
     [[criterions.nodes]]
     index = 1
     name = "交易信息"
     dname = "cri.1"
     group_id = 0
-    childs = [4,5,6,7,8]
+    childs_group_id = 1
     [[criterions.nodes]]
     index = 2
     name = "产品因素"
     dname = "cri.2"
     group_id = 0
-    childs = [9,10,11,12]
+    childs_group_id = 2
     [[criterions.nodes]]
     index = 3
     name = "物流因素"
     dname = "cri.3"
     group_id = 0
-    childs = [13,14,15,16,17]
+    childs_group_id = 3
 
 # 指标层配置.
 [indices]

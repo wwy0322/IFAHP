@@ -1,8 +1,9 @@
-from typing import List, Any, Callable
+from typing import List, Any, Callable, Tuple
 import toml
 from config import data_dir
 import os
 import json
+from functools import reduce
 
 '''
 所有的直觉模糊度节点类
@@ -10,12 +11,14 @@ import json
 
 
 class Node:
-    __slots__ = ('membership', 'non_membership', 'hesitation', 'name')
-
     name: str
     membership: float
     non_membership: float
     hesitation: float
+    # 这三个是原始数据, 在测试数据集合里面是没有的.
+    good: int
+    bad: int
+    unknown: int
 
     def __init__(self, name, membership=0.5, non_membership=0.3, hesitation=0.2):
         # 隶属度, 非隶属度, 犹豫度.
@@ -23,6 +26,9 @@ class Node:
         self.membership = membership
         self.non_membership = non_membership
         self.hesitation = hesitation
+        self.good = 0
+        self.bad = 0
+        self.unknown = 0
 
     def __format__(self, format_spec: str) -> str:
         return "{}: ({} {} {})".format(self.name, self.membership, self.non_membership, self.hesitation)
@@ -32,6 +38,11 @@ class Node:
 
     def into_vec(self) -> List[float]:
         return [self.membership, self.non_membership, self.hesitation]
+
+    def from_origin_data_vec(self, vec: List[int]):
+        self.good, self.bad, self.unknown = vec
+        v_total = reduce(lambda x, y: x + y, vec)
+        self.from_vec([vec[0] / v_total, vec[1] / v_total, vec[2] / v_total])
 
 
 '''
@@ -90,6 +101,9 @@ class BaseLevelMatrix:
     # 这个矩阵的论域: f[y][x]表示x相对于y这个指标的优秀程度.
     refined_matrix: List[List[List[RelationNode]]]
 
+    #   最终的权重矩阵, 在计算好refined matrix之后就可以被计算出来.
+    weight_list: List[Tuple[float, float]]
+
     # conf, toml的解析对象, 方便随时读取.
     conf: Any
 
@@ -138,7 +152,8 @@ class BaseLevelMatrix:
             node = Node(name)
             # 这里给测试留了逻辑, 允许不读取数据.
             if node_info.get("values") is not None:
-                node.from_vec(node_info["values"])
+                v = node_info["values"]
+                node.from_origin_data_vec(v)
 
             self.nodes.append(node)
 
@@ -148,6 +163,11 @@ class BaseLevelMatrix:
             else:
                 self.groups.append([len(self.nodes) - 1])
         return True
+
+    def get_group_id(self, id: int):
+        for group_id in range(len(self.groups)):
+            if id in self.groups[group_id]:
+                return group_id
 
     # 拟合该层直到符合一致性矩阵判断标准.
     def fix(self):
@@ -275,6 +295,10 @@ class BaseLevelMatrix:
                             (1 - self.fix_matrix[i][j][k].non_membership), self.alpha)
                         self.refined_matrix[i][j][k].membership = refine_m1 / (refine_m1 + refine_m2)
                         self.refined_matrix[i][j][k].non_membership = refine_nm1 / (refine_nm1 + refine_nm2)
-                        self.refined_matrix[i][j][k].hesitation = 1-self.refined_matrix[i][j][k].membership-self.refined_matrix[i][j][k].non_membership
+                        self.refined_matrix[i][j][k].hesitation = 1 - self.refined_matrix[i][j][k].membership - \
+                                                                  self.refined_matrix[i][j][k].non_membership
                 return self.check_consistency(self.matrix[i], self.refined_matrix[i])[0]
-        return False
+        return self.calc_weight_list()
+
+    def calc_weight_list(self) -> bool:
+        return True
