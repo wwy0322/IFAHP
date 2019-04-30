@@ -54,7 +54,7 @@ class RelationNode(Node):
     node_a: Node
     node_b: Node
 
-    def __init__(self, node_a: Node, node_b: Node, f: Callable = None):
+    def __init__(self, node_a: Node, node_b: Node, f: Callable[[Node, Node], List[float]] = None):
         self.node_a = node_a
         self.node_b = node_b
         super(RelationNode, self).__init__(node_a.name + "_" + node_b.name)
@@ -112,7 +112,7 @@ class BaseLevelMatrix:
 
     # 保存调整后的修正因子. alpha同时可以表示matrix有没有被初始化ok.
     # 如果一开始还没有matrix, 那么alpha表示
-    alpha: float
+    alphas: List[float]
     delta: float
 
     def __init__(self):
@@ -184,6 +184,9 @@ class BaseLevelMatrix:
             if not self.calc_refined_matrix():
                 raise RuntimeError("In this case, construct refined matrix fail!")
 
+        if not self.calc_weight_list():
+            raise RuntimeError("In this case, construct refined matrix fail!")
+
     @staticmethod
     # 检查自己的matrix
     def check_consistency(origin_matrix: List[List[RelationNode]], target_matrix: List[List[RelationNode]]) \
@@ -233,72 +236,83 @@ class BaseLevelMatrix:
     def calc_fix_matrix(self) -> bool:
         m1, m2, nm1, nm2 = 1, 1, 1, 1
         # 遍历group
-        for i in range(len(self.matrix)):
+        for group_id in range(len(self.matrix)):
+            self.fix_matrix.append([])
             # 遍历矩阵内元素
-            for j in range(len(self.matrix[i])):
-                for k in range(len(self.matrix[i][j])):
-                    if k == j + 1:
-                        self.fix_matrix[i][j][k] = self.matrix[i][j][k]
-                    elif k > j + 1:
-                        for t in range(j + 1, k - 1):
-                            m1 = m1 * pow(self.matrix[i][j][t].membership * self.matrix[i][t][k].membership,
-                                          1 / (j - i - 1))
-                            m2 = m2 * pow((1 - self.matrix[i][j][t].membership) * (1 - self.matrix[i][t][k].membership),
-                                          1 / (j - i - 1))
-                            nm1 = nm1 * pow(self.matrix[i][j][t].non_membership * self.matrix[i][t][k].membership,
-                                            1 / (j - i - 1))
+            for i in range(len(self.matrix[group_id])):
+                self.fix_matrix[group_id].append([])
+                for j in range(len(self.matrix[group_id][i])):
+                    assert len(self.fix_matrix[group_id][i]) == j, \
+                        "Fix Matrix Size Error! j = %d but len = %d" % (j, len(self.fix_matrix[group_id][i]))
+                    self.fix_matrix[group_id][i].append(
+                        RelationNode(self.matrix[group_id][i][j].node_a, self.matrix[group_id][i][j].node_b))
+
+                    if j == i + 1:
+                        self.fix_matrix[group_id][i][j].from_vec(self.matrix[group_id][i][j].into_vec())
+                    elif j > i + 1:
+                        for t in range(i + 1, j - 1):
+                            m1 = m1 * pow(
+                                self.matrix[group_id][i][t].membership * self.matrix[group_id][t][j].membership,
+                                1 / (i - group_id - 1))
+                            m2 = m2 * pow((1 - self.matrix[group_id][i][t].membership) * (
+                                    1 - self.matrix[group_id][t][j].membership),
+                                          1 / (i - group_id - 1))
+                            nm1 = nm1 * pow(
+                                self.matrix[group_id][i][t].non_membership * self.matrix[group_id][t][j].membership,
+                                1 / (i - group_id - 1))
                             nm2 = nm1 * pow(
-                                (1 - self.matrix[i][j][t].non_membership) * (1 - self.matrix[i][t][k].non_membership),
-                                1 / (j - i - 1))
-                            self.fix_matrix[i][j][k].membership = m1 / (m1 + m2)
-                            self.fix_matrix[i][j][k].non_membership = nm1 / (nm1 + nm2)
-                            self.fix_matrix[i][j][k].hesitation = (
-                                    1 - self.fix_matrix[i][j][k].membership - self.fix_matrix[i][j][k].non_membership)
-                    if k == j + 1:
-                        self.fix_matrix[i][j][k] = self.matrix[i][j][k]
-                    elif k > j + 1:
-                        for t in range(j + 1, k - 1):
-                            m1 = m1 * pow(self.matrix[i][j][t].membership * self.matrix[i][t][k].membership,
-                                          1 / (j - i - 1))
-                            m2 = m2 * pow((1 - self.matrix[i][j][t].membership) * (1 - self.matrix[i][t][k].membership),
-                                          1 / (j - i - 1))
-                            nm1 = nm1 * pow(self.matrix[i][j][t].non_membership * self.matrix[i][t][k].membership,
-                                            1 / (j - i - 1))
-                            nm2 = nm1 * pow(
-                                (1 - self.matrix[i][j][t].non_membership) * (1 - self.matrix[i][t][k].non_membership),
-                                1 / (j - i - 1))
-                            self.fix_matrix[i][j][k].membership = m1 / (m1 + m2)
-                            self.fix_matrix[i][j][k].non_membership = nm1 / (nm1 + nm2)
-                            self.fix_matrix[i][j][k].hesitation = (
-                                    1 - self.fix_matrix[i][j][k].membership - self.fix_matrix[i][j][k].non_membership)
+                                (1 - self.matrix[group_id][i][t].non_membership) * (
+                                        1 - self.matrix[group_id][t][j].non_membership),
+                                1 / (i - group_id - 1))
+
+                            self.fix_matrix[group_id][i][j].from_vec([
+                                m1 / (m1 + m2),
+                                nm1 / (nm1 + nm2),
+                                1 - m1 / (m1 + m2) - nm1 / (nm1 + nm2)
+                            ])
                     else:
-                        self.fix_matrix[i][j][k].membership = 0.5
-                        self.fix_matrix[i][j][k].non_membership = 0.5
-                        self.fix_matrix[i][j][k].hesitation = 0
+                        self.fix_matrix[group_id][i][j].from_vec([0.5, 0.5, 0])
         return True
 
     # 计算得到满足一致性的直觉模糊一致性矩阵.
     def calc_refined_matrix(self) -> bool:
-        while 0 <= self.alpha <= 1:
-            self.alpha -= 0.01
-            for i in range(len(self.matrix)):
-                # 遍历矩阵内元素
-                for j in range(len(self.matrix[i])):
-                    for k in range(len(self.matrix[i][j])):
-                        refine_m1 = pow(self.matrix[i][j][k].membership, (1 - self.alpha)) * pow(
-                            self.fix_matrix[i][j][k].membership, self.alpha)
-                        refine_m2 = pow((1 - self.matrix[i][j][k].membership), (1 - self.alpha)) * pow(
-                            (1 - self.fix_matrix[i][j][k].membership), self.alpha)
-                        refine_nm1 = pow(self.matrix[i][j][k].non_membership, (1 - self.alpha)) * pow(
-                            self.fix_matrix[i][j][k].non_membership, self.alpha)
-                        refine_nm2 = pow((1 - self.matrix[i][j][k].non_membership), (1 - self.alpha)) * pow(
-                            (1 - self.fix_matrix[i][j][k].non_membership), self.alpha)
-                        self.refined_matrix[i][j][k].membership = refine_m1 / (refine_m1 + refine_m2)
-                        self.refined_matrix[i][j][k].non_membership = refine_nm1 / (refine_nm1 + refine_nm2)
-                        self.refined_matrix[i][j][k].hesitation = 1 - self.refined_matrix[i][j][k].membership - \
-                                                                  self.refined_matrix[i][j][k].non_membership
-                return self.check_consistency(self.matrix[i], self.refined_matrix[i])[0]
-        return self.calc_weight_list()
+        # 每个group有自己的权重.
+        self.alpha = [1 for _ in range(len(self.matrix))]
+
+        for group_id in range(len(self.matrix)):
+            # 遍历矩阵内元素
+            self.refined_matrix.append([])
+            while 0 <= self.alpha[group_id] <= 1:
+                self.refined_matrix[group_id] = []
+                for i in range(len(self.matrix[group_id])):
+                    self.refined_matrix[group_id].append([])
+                    for j in range(len(self.matrix[group_id][i])):
+                        assert len(self.refined_matrix[group_id][i]) == j, \
+                            "Refine Matrix Size Error! j = %d but len = %d" % (j, len(self.refined_matrix[group_id][i]))
+                        self.refined_matrix[group_id][i].append(
+                            RelationNode(self.matrix[group_id][i][j].node_a, self.matrix[group_id][i][j].node_b))
+
+                        refine_m1 = pow(self.matrix[group_id][i][j].membership, (1 - self.alpha[group_id])) \
+                                    * pow(self.fix_matrix[group_id][i][j].membership, self.alpha[group_id])
+                        refine_m2 = pow((1 - self.matrix[group_id][i][j].membership), (1 - self.alpha[group_id])) \
+                                    * pow((1 - self.fix_matrix[group_id][i][j].membership), self.alpha[group_id])
+                        refine_nm1 = pow(self.matrix[group_id][i][j].non_membership, (1 - self.alpha[group_id])) \
+                                     * pow(self.fix_matrix[group_id][i][j].non_membership, self.alpha[group_id])
+                        refine_nm2 = pow((1 - self.matrix[group_id][i][j].non_membership), (1 - self.alpha[group_id])) \
+                                     * pow((1 - self.fix_matrix[group_id][i][j].non_membership), self.alpha[group_id])
+                        self.refined_matrix[group_id][i][j].from_vec([
+                            refine_m1 / (refine_m1 + refine_m2),
+                            refine_nm1 / (refine_nm1 + refine_nm2),
+                            1 - refine_m1 / (refine_m1 + refine_m2) - refine_nm1 / (refine_nm1 + refine_nm2)
+                        ])
+                if self.check_consistency(self.matrix[group_id], self.refined_matrix[group_id])[0]:
+                    break
+                self.alpha[group_id] -= 0.01
+
+            assert self.alpha[group_id] >= 0, "Refine Matrix Error, Can't refine it! alpha = %.4f, group id = %d " \
+                                              % (self.alpha[group_id], group_id)
+
+        return True
 
     def calc_weight_list(self) -> bool:
         return True
