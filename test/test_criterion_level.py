@@ -1,6 +1,7 @@
 import unittest
 from config import test_conf_file
 from level.criterion_level_matrix import CriterionLevelMatrix
+from level.util import *
 
 '''
 针对第一份数据准则层的测试用例
@@ -62,3 +63,22 @@ class CriterionLevelTest(unittest.TestCase):
                 theory_val = self.m.data["refine_matrix"][name]
                 self.assertAlmostEqual(actual_val[0], theory_val[0], places=4)
                 self.assertAlmostEqual(actual_val[1], theory_val[1], places=4)
+
+    # def test_weight_list(self):
+    #     if len(self.m.fix_matrix) == 0:
+    #         self.m.calc_fix_matrix()
+    #     if len(self.m.refined_matrix) == 0:
+    #         self.m.calc_refined_matrix()
+    #
+    #     self.m.calc_weight_list()
+    #
+    #     actual_weights = self.m.weight_list
+    #     theory_weights = self.m.data['weight_list']
+    #     self.assertEqual(len(actual_weights), len(theory_weights))
+    #     for group_id in range(len(actual_weights)):
+    #         self.assertEqual(len(actual_weights[group_id]), len(theory_weights[group_id]))
+    #         for node_id in range(len(actual_weights[group_id])):
+    #             self.assertAlmostEqual(actual_weights[group_id][node_id][0],
+    #                                    theory_weights[group_id][node_id][0], places=4)
+    #             self.assertAlmostEqual(actual_weights[group_id][node_id][1],
+    #                                    theory_weights[group_id][node_id][1], places=4)

@@ -41,7 +41,7 @@ data_file = "index_level_data.test.json"
     [[indices.nodes]]
     index = 0
     name = "商家规模"
-    dname = "ind.1"
+    dname = "ind.0"
     group_id = 0
     [[indices.nodes]]
     index = 1
@@ -82,7 +82,7 @@ data_file = "index_level_data.test.json"
     index = 8
     name = "商品质量"
     dname = "ind.8"
-    group_id = 1
+    group_id = 2
     [[indices.nodes]]
     index = 9
     name = "商品相符度"
@@ -121,7 +121,7 @@ data_file = "index_level_data.test.json"
     [[indices.nodes]]
     index = 16
     name = "配送地点准确性"
-    dname = "16"
+    dname = "ind.16"
     group_id = 3
     [[indices.nodes]]
     index = 17

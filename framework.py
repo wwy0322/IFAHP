@@ -43,13 +43,11 @@ class Framework:
         final_weight_set = []
         criterion_nodes_cnt = len(self.criterion_level.nodes)
         for criterion_id in range(criterion_nodes_cnt):
-            index_group = self.index_level.groups[criterion_id]
-            for index_id in index_group:
+            for index_id in range(len(self.index_level.weight_list[criterion_id])):
                 final_weight_set.append(util.weight_mul(
-                    self.criterion_level.weight_list[criterion_id],
-                    self.index_level.weight_list[index_id]
+                    self.criterion_level.weight_list[0][criterion_id],
+                    self.index_level.weight_list[criterion_id][index_id]
                 ))
-
         self.final_weight = reduce(lambda x, y: util.weight_add(x, y), final_weight_set)
 
     def after_build(self) -> bool:

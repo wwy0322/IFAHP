@@ -122,6 +122,7 @@ class BaseLevelMatrix:
         self.matrix = []
         self.fix_matrix = []
         self.refined_matrix = []
+        self.weight_list = []
         self.conf = None
         self.data = None
         self.alpha = []
@@ -224,9 +225,9 @@ class BaseLevelMatrix:
             for i in range(n):
                 matrix[i] = [None for _ in range(n)]
 
-            for index_i in group:
-                for index_j in group:
-                    relation_node = RelationNode(self.nodes[index_i], self.nodes[index_j], func)
+            for index_i in range(len(group)):
+                for index_j in range(len(group)):
+                    relation_node = RelationNode(self.nodes[group[index_i]], self.nodes[group[index_j]], func)
                     matrix[index_i][index_j] = relation_node
 
             self.matrix.append(matrix)
@@ -256,7 +257,7 @@ class BaseLevelMatrix:
                                 1 / (j - i - 1))
                             m2 *= pow((1 - self.matrix[group_id][i][t].membership) * (
                                     1 - self.matrix[group_id][t][j].membership),
-                                          1 / (j-i - 1))
+                                      1 / (j - i - 1))
                             nm1 *= pow(
                                 self.matrix[group_id][i][t].non_membership * self.matrix[group_id][t][j].non_membership,
                                 1 / (j - i - 1))
@@ -270,12 +271,13 @@ class BaseLevelMatrix:
                             nm1 / (nm1 + nm2),
                             1 - m1 / (m1 + m2) - nm1 / (nm1 + nm2)
                         ])
-                        m1,m2,nm1,nm2=1,1,1,1
+                        m1, m2, nm1, nm2 = 1, 1, 1, 1
                     elif j < i:
                         self.fix_matrix[group_id][i][j].from_vec([
                             self.fix_matrix[group_id][j][i].non_membership,
                             self.fix_matrix[group_id][j][i].membership,
-                            1-self.fix_matrix[group_id][j][i].non_membership-self.fix_matrix[group_id][j][i].membership
+                            1 - self.fix_matrix[group_id][j][i].non_membership - self.fix_matrix[group_id][j][
+                                i].membership
                         ])
                     else:
                         self.fix_matrix[group_id][i][j].from_vec([0.5, 0.5, 0])
@@ -323,20 +325,25 @@ class BaseLevelMatrix:
 
     def calc_weight_list(self) -> bool:
         s1, s2, m, nm = 0, 0, 0, 0
-        M, NM = [],[]
+        M, NM = [], []
         for group_id in range(len(self.refined_matrix)):
             self.weight_list.append([])
+            M.append([])
+            NM.append([])
             for i in range(len(self.refined_matrix[group_id])):
-                self.weight_list[group_id].append([])
+                # 这一步仅仅是为了扩充list的内存长度.
+                self.weight_list[group_id].append((0, 0))
                 for j in range(len(self.refined_matrix[group_id][i])):
                     m += self.refined_matrix[group_id][i][j].membership
-                    nm += (1-self.refined_matrix[group_id][i][j].non_membership)
-                    s1 += m
-                    s2 += nm
-                M.append(m)
-                NM.append(nm)
+                    nm += (1 - self.refined_matrix[group_id][i][j].non_membership)
+                    s1 += self.refined_matrix[group_id][i][j].membership
+                    s2 += (1 - self.refined_matrix[group_id][i][j].non_membership)
+                M[group_id].append(m)
+                NM[group_id].append(nm)
                 nm, m = 0, 0
-        for group_id in range(len(self.weight_list)):
+
             for i in range(len(self.weight_list[group_id])):
-                self.weight_list[group_id][i]=((M[i]/s2), (1-(NM[i]/s1)))
+                self.weight_list[group_id][i] = (M[group_id][i] / s2, 1 - NM[group_id][i] / s1)
+            s1, s2, m, nm = 0, 0, 0, 0
+
         return True
