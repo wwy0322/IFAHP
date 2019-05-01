@@ -43,8 +43,8 @@ class FrameworkTest(unittest.TestCase):
             (0.6474, -0.5445)
         ]
         ret = reduce(lambda x, y: weight_add(x, y), datas)
-        self.assertAlmostEqual(ret[0], 0.061, places=4)
-        self.assertAlmostEqual(ret[1], 0.8772, places=4)
+        self.assertAlmostEqual(ret[0], 0.9825, places=4)
+        self.assertAlmostEqual(ret[1], -8.15e-5, places=4)
 
     def test_all(self):
         datas = [
@@ -56,5 +56,5 @@ class FrameworkTest(unittest.TestCase):
         ]
 
         ret = reduce(lambda x, y: weight_add(x, y), datas)
-        self.assertAlmostEqual(ret[0], 0.2172, places=4)
-        self.assertAlmostEqual(ret[1], 0.6039, places=4)
+        self.assertAlmostEqual(ret[0], 0.2066, places=4)
+        self.assertAlmostEqual(ret[1], 0.4503, places=4)
