@@ -27,6 +27,6 @@ def weight_add(w1: Tuple[float, float], w2: Tuple[float, float]) -> Tuple[float,
 
 # 模糊权重乘法
 def weight_mul(w1: Tuple[float, float], w2: Tuple[float, float]) -> Tuple[float, float]:
-    r1 = w1[0] * w1[0]
+    r1 = w1[0] * w2[0]
     r2 = w1[1] + w2[1] - w1[1] * w2[1]
     return r1, r2
