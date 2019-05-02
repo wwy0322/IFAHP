@@ -11,27 +11,26 @@ class Framework:
     criterion_level: CriterionLevelMatrix
     index_level: IndexLevelMatrix
     final_weight: Tuple[float, float]
+    case_name: str
 
-    def __init__(self, conf_file):
+    def __init__(self, conf_file: str, case_name: str):
+        self.case_name = case_name
         self.target_level = TargetLeveLMatrix()
-        ret = self.target_level.init(conf_file)
+        ret = self.target_level.init(conf_file, self.case_name)
         if not ret:
             raise RuntimeError("target level init error!")
         self.criterion_level = CriterionLevelMatrix()
-        ret = self.criterion_level.init(conf_file)
+        ret = self.criterion_level.init(conf_file, self.case_name)
         if not ret:
             raise RuntimeError("criterion level init error!")
         self.index_level = IndexLevelMatrix()
-        ret = self.index_level.init(conf_file)
+        ret = self.index_level.init(conf_file, self.case_name)
         if not ret:
             raise RuntimeError("index level init error!")
 
     # 求解直觉模糊矩阵的合理值.计算矩阵的权重.
     def build(self):
         # 计算模糊矩阵部分.
-        ret = self.target_level.fix()
-        if not ret:
-            raise RuntimeError("target level fix error!")
         ret = self.criterion_level.fix()
         if not ret:
             raise RuntimeError("criterion level fix error!")
@@ -53,11 +52,11 @@ class Framework:
     def after_build(self) -> bool:
         # 各种check是否合法.
         ret = True
-        ret &= len(self.criterion_level.nodes) == len(self.criterion_level.weight_list)
+        ret &= len(self.criterion_level.nodes) == len(self.criterion_level.weight_list[0])
 
         return ret
 
-    def __format__(self, format_spec):
+    def __repr__(self):
         def final_result_calc(arg: Tuple[float, float]) -> float:
             return 0.5 * (1 + arg[0]) * (1 - arg[1])
 
@@ -66,3 +65,5 @@ class Framework:
         ret += " Level 1 Weight = {} \n".format("{}".format(self.criterion_level.weight_list))
         ret += " Level 2 Weight = {} \n".format("{}".format(self.index_level.weight_list))
         ret += " Final Result = {} \n".format(final_result_calc(self.final_weight))
+
+        return ret

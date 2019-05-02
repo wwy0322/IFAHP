@@ -6,3 +6,5 @@ conf_dir = os.path.join(root_dir, "conf")
 test_conf_dir = os.path.join(conf_dir, "test")
 conf_file = os.path.join(conf_dir, "conf.toml")
 test_conf_file = os.path.join(test_conf_dir, "test.conf.toml")
+# 数据样本总数.
+case_cnt = 40

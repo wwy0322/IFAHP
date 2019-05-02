@@ -66,8 +66,8 @@ class RelationNode(Node):
     @staticmethod
     def default_relation_func(node_a: Node, node_b: Node) -> List[float]:
         ret = [
-            1 + node_a.membership - node_b.membership,  # membership
-            1 + node_a.non_membership - node_b.non_membership,  # non_membership
+            (1 + node_a.membership - node_b.membership) / 2,  # membership
+            (1 + node_a.non_membership - node_b.non_membership) / 2,  # non_membership
             0
         ]
         ret[2] = 1 - ret[0] - ret[1]
@@ -129,19 +129,18 @@ class BaseLevelMatrix:
         self.delta = 0.01
         self.name = "unknown"
 
-    def init(self, conf_file: str) -> bool:
+    def init(self, conf_file: str, case_name: str) -> bool:
 
-        ret = self.init_conf(conf_file)
+        ret = self.init_conf(conf_file, case_name)
         if not ret:
             return ret
         return self.init_nodes_from_conf()
 
-    def init_conf(self, conf_file: str) -> bool:
+    def init_conf(self, conf_file: str, case_name: str) -> bool:
         with open(conf_file, "r") as conf_file:
             self.conf = toml.load(conf_file)[self.name]
             with open(os.path.join(data_dir, self.conf["data_file"]), "r") as data_file:
-                # TODO 目前默认为case1.
-                self.data = json.load(data_file)["case1"]
+                self.data = json.load(data_file)[case_name]
         return True
 
     # 这个函数初始化nodes和groups这两个矩阵.
@@ -152,10 +151,9 @@ class BaseLevelMatrix:
             group_id: int = node_info['group_id']
             node = Node(name)
             # 这里给测试留了逻辑, 允许不读取数据.
-            if node_info.get("values") is not None:
-                v = node_info["values"]
-                node.from_origin_data_vec(v)
-
+            if self.data.get("node_data") is not None:
+                stat_data = self.data["node_data"][name]
+                node.from_origin_data_vec(stat_data)
             self.nodes.append(node)
 
             # TODO 目前要求数据的传入是按照index卡着来的, 对异常数据处理不足.
@@ -164,11 +162,6 @@ class BaseLevelMatrix:
             else:
                 self.groups.append([len(self.nodes) - 1])
         return True
-
-    def get_group_id(self, id: int):
-        for group_id in range(len(self.groups)):
-            if id in self.groups[group_id]:
-                return group_id
 
     # 拟合该层直到符合一致性矩阵判断标准.
     def fix(self):
@@ -187,6 +180,8 @@ class BaseLevelMatrix:
 
         if not self.calc_weight_list():
             raise RuntimeError("In this case, construct refined matrix fail!")
+
+        return True
 
     @staticmethod
     # 检查自己的matrix
@@ -211,6 +206,8 @@ class BaseLevelMatrix:
                 hesi = abs(target_matrix[i][j].hesitation - origin_matrix[i][j].hesitation)
                 d += (mem + nonmem + hesi)
         n = len(origin_matrix)
+        if n == 2:
+            return True, 0
         d = d / (2 * (n - 1) * (n - 2))
         return d < 0.1, d
 

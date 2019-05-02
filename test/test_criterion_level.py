@@ -18,7 +18,7 @@ class CriterionLevelTest(unittest.TestCase):
     def setUp(self):
         self.m = CriterionLevelMatrix()
         # init了group, nodes(值没有初始化), 还有额外的matrix.
-        self.assertEqual(self.m.init(test_conf_file), True)
+        self.assertEqual(self.m.init(test_conf_file, "case1"), True)
 
     # 测试数据是否初始化正确.
     def test_read(self):

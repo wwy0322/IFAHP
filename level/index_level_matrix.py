@@ -13,16 +13,16 @@ class IndexLevelMatrix(BaseLevelMatrix):
         super(IndexLevelMatrix, self).__init__()
         self.name = "indices"
 
-    def init(self, conf_file: str) -> bool:
+    def init(self, conf_file: str, case_name: str) -> bool:
         if conf_file.find("test") != -1:
             return self.init_test(conf_file)
         else:
-            return super(IndexLevelMatrix, self).init(conf_file)
+            return super(IndexLevelMatrix, self).init(conf_file, case_name)
 
     # TODO 为了测试目录方便, 这些接口全都暴露了出来. 后续可以把测试用例实现在本文件内.
     # TODO 测试目录文件只负责集成测试.
     def init_test(self, conf_file: str) -> bool:
-        ret = self.init_conf(conf_file)
+        ret = self.init_conf(conf_file, "case1")
         if not ret:
             return ret
 

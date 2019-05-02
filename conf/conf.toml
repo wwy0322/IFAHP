@@ -1,1 +1,125 @@
-[index]
+# 目标层配置.
+[target]
+name = "target_level"
+childs_group_id = 0
+
+
+# 准则层配置.
+[criterions]
+node_cnt = 5
+data_file = "criterion_level.realdata.json"
+    [[criterions.nodes]]
+    index = 0
+    name = "风险分析"
+    dname = "cri.0"
+    group_id = 0
+    childs_group_id = 0
+    [[criterions.nodes]]
+    index = 1
+    name = "风险预防"
+    dname = "cri.1"
+    group_id = 0
+    childs_group_id = 1
+    [[criterions.nodes]]
+    index = 2
+    name = "风险控制"
+    dname = "cri.2"
+    group_id = 0
+    childs_group_id = 2
+    [[criterions.nodes]]
+    index = 3
+    name = "风险处理"
+    dname = "cri.3"
+    group_id = 0
+    childs_group_id = 3
+    [[criterions.nodes]]
+    index = 4
+    name = "监测与改进"
+    dname = "cri.4"
+    group_id = 0
+    childs_group_id = 4
+
+# 指标层配置.
+[indices]
+node_cnt = 16
+data_file = "index_level.realdata.json"
+    [[indices.nodes]]
+    index = 0
+    name = "商业理念"
+    dname = "ind.0"
+    group_id = 0
+    [[indices.nodes]]
+    index = 1
+    name = "风险识别"
+    dname = "ind.1"
+    group_id = 0
+    [[indices.nodes]]
+    index = 2
+    name = "风险分类"
+    dname = "ind.2"
+    group_id = 0
+    [[indices.nodes]]
+    index = 3
+    name = "安全组织"
+    dname = "ind.3"
+    group_id = 1
+    [[indices.nodes]]
+    index = 4
+    name = "培训及演练"
+    dname = "ind.4"
+    group_id = 1
+    [[indices.nodes]]
+    index = 5
+    name = "业务连续性"
+    dname = "ind.5"
+    group_id = 1
+    [[indices.nodes]]
+    index = 6
+    name = "安全策略与规程"
+    dname = "ind.6"
+    group_id = 2
+    [[indices.nodes]]
+    index = 7
+    name = "人员安全"
+    dname = "ind.7"
+    group_id = 2
+    [[indices.nodes]]
+    index = 8
+    name = "物理环境安全"
+    dname = "ind.8"
+    group_id = 2
+    [[indices.nodes]]
+    index = 9
+    name = "网络划分"
+    dname = "ind.9"
+    group_id = 2
+    [[indices.nodes]]
+    index = 10
+    name = "访问控制"
+    dname = "ind.10"
+    group_id = 2
+    [[indices.nodes]]
+    index = 11
+    name = "事件响应"
+    dname = "ind.11"
+    group_id = 3
+    [[indices.nodes]]
+    index = 12
+    name = "系统维护"
+    dname = "ind.12"
+    group_id = 3
+    [[indices.nodes]]
+    index = 13
+    name = "信息与文档管理"
+    dname = "ind.13"
+    group_id = 3
+    [[indices.nodes]]
+    index = 14
+    name = "一致性"
+    dname = "ind.14"
+    group_id = 4
+    [[indices.nodes]]
+    index = 15
+    name = "审查改进与维护"
+    dname = "ind.15"
+    group_id = 4

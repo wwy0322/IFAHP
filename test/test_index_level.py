@@ -13,7 +13,7 @@ class TestIndexLevel(unittest.TestCase):
 
     def setUp(self):
         self.m = IndexLevelMatrix()
-        self.assertEqual(self.m.init(test_conf_file), True)
+        self.assertEqual(self.m.init(test_conf_file, "case1"), True)
 
     def test(self):
         # 只有最后的一致性检测可以测试了
