@@ -68,13 +68,13 @@ class RelationNode(Node):
 
     @staticmethod
     def default_relation_func(node_a: Node, node_b: Node) -> List[float]:
-        ret = [
-            (1 + node_a.membership - node_b.membership) / 2,  # membership
-            (1 + node_a.non_membership - node_b.non_membership) / 2,  # non_membership
-            0
+        from model.model import m
+        return [
+            m.calc_membership(node_a.membership, node_b.membership),
+            m.calc_nonmembership(node_a.non_membership, node_b.non_membership),
+            1 - m.calc_membership(node_a.membership, node_b.membership) - m.calc_nonmembership(node_a.non_membership,
+                                                                                               node_b.non_membership)
         ]
-        ret[2] = 1 - ret[0] - ret[1]
-        return ret
 
 
 class BaseLevelMatrix:

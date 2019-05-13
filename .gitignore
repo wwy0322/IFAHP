@@ -1,1 +1,3 @@
 data/*.realdata.json
+model/*.model.json
+model/model.py
